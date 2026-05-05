@@ -3,91 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread | Integrated</title>
+    <title>Daily Bread</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@600&family=Inter:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background: #fdfbf7; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .loader { border-top-color: #065f46; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <div id="app-container" class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-stone-100 hidden">
-        <div class="bg-stone-900 p-8 text-white relative">
-            <p id="date-label" class="text-stone-400 text-xs font-bold uppercase tracking-[0.2em] mb-2"></p>
+        <div class="bg-stone-900 p-8 text-white">
+            <p id="date-label" class="text-stone-400 text-xs font-bold uppercase tracking-widest mb-2"></p>
             <h1 id="saint-display" class="serif text-3xl font-bold italic leading-tight">Saint of the Day</h1>
         </div>
-
         <div class="p-8 space-y-8">
-            <section>
-                <div class="flex items-center space-x-3 mb-4">
-                    <span class="h-px flex-1 bg-stone-200"></span>
-                    <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Holy Gospel</span>
-                    <span class="h-px flex-1 bg-stone-200"></span>
-                </div>
-                <div class="relative">
-                    <p id="gospel-text" class="serif text-xl text-stone-800 leading-relaxed italic text-center px-4"></p>
-                    <p id="gospel-ref" class="text-center text-emerald-700 font-bold text-xs mt-4 uppercase tracking-widest"></p>
-                </div>
+            <section class="text-center">
+                <p id="gospel-text" class="serif text-xl text-stone-800 leading-relaxed italic"></p>
+                <p id="gospel-ref" class="text-emerald-700 font-bold text-xs mt-4 uppercase tracking-widest"></p>
             </section>
-
             <section class="bg-stone-50 rounded-3xl p-6 border border-stone-100">
-                <h3 class="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center">Daily Prayer</h3>
-                <p id="prayer-display" class="text-stone-700 text-sm leading-relaxed"></p>
+                <p id="prayer-display" class="text-stone-700 text-sm leading-relaxed text-center italic"></p>
             </section>
         </div>
     </div>
 
     <div id="loading" class="text-center">
-        <div class="loader w-12 h-12 border-4 border-stone-200 rounded-full mx-auto mb-4"></div>
-        <p id="loading-status" class="serif italic text-stone-500">Preparing today's devotion...</p>
+        <div class="w-12 h-12 border-4 border-stone-200 border-t-emerald-800 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="serif italic text-stone-500">Opening the Word...</p>
     </div>
 
     <script>
         async function initApp() {
-            const status = document.getElementById('loading-status');
-            try {
-                // 1. Get Liturgical Data with a Fallback
-                status.innerText = "Consulting the Calendar...";
-                const calRes = await fetch('https://calapi.inadiutorium.cz/api/v0/en/calendars/default/today');
-                
-                let saintName = "Ferial Day";
-                let liturgicalColor = "green";
+            // Setup Timeout for slow APIs
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000); 
 
-                if (calRes.ok) {
+            try {
+                // 1. Set Date
+                document.getElementById('date-label').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                // 2. Fetch Data
+                let saint = "St. Marian & St. James"; // Fallback for May 6
+                let verse = "I am the way, and the truth, and the life.";
+                let ref = "John 14:6";
+
+                try {
+                    const calRes = await fetch('https://calapi.inadiutorium.cz/api/v0/en/calendars/default/today', { signal: controller.signal });
                     const calData = await calRes.json();
-                    if (calData.celebrations && calData.celebrations.length > 0) {
-                        saintName = calData.celebrations[0].title;
-                        liturgicalColor = calData.celebrations[0].colour;
-                    }
+                    saint = calData.celebrations[0]?.title || saint;
+
+                    const bibleRes = await fetch('https://bible-api.com/john+14:6');
+                    const bibleData = await bibleRes.json();
+                    verse = bibleData.text.trim();
+                    ref = bibleData.reference;
+                } catch (e) {
+                    console.log("Using built-in fallback data.");
                 }
 
-                // 2. Mapping Logic
-                let verseRef = "John 14:27"; 
-                if(liturgicalColor === 'red') verseRef = "John 15:13";
-                if(liturgicalColor === 'violet') verseRef = "Psalm 51:10";
-
-                // 3. Fetch Bible Verse
-                status.innerText = "Opening the Gospel...";
-                const bibleRes = await fetch(`https://bible-api.com/${verseRef}`);
-                const bibleData = await bibleRes.json();
-
-                // 4. Update UI
-                document.getElementById('date-label').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-                document.getElementById('saint-display').innerText = saintName;
-                document.getElementById('gospel-text').innerText = `"${bibleData.text.trim()}"`;
-                document.getElementById('gospel-ref').innerText = bibleData.reference;
-                document.getElementById('prayer-display').innerText = `Heavenly Father, as we honor ${saintName} today, grant us the grace to embody the virtues they showed. May the words of ${bibleData.reference} guide our steps. Amen.`;
+                // 3. Render
+                document.getElementById('saint-display').innerText = saint;
+                document.getElementById('gospel-text').innerText = `"${verse}"`;
+                document.getElementById('gospel-ref').innerText = ref;
+                document.getElementById('prayer-display').innerText = `Lord, as we honor ${saint} today, help us to follow Your path with courage. Amen.`;
 
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
 
             } catch (err) {
-                console.error(err);
-                status.innerHTML = "Connection issue. <br> <button onclick='location.reload()' class='mt-4 text-emerald-700 underline'>Try Again</button>";
+                document.getElementById('loading').innerHTML = "Something went wrong. Please refresh.";
             }
         }
         initApp();
