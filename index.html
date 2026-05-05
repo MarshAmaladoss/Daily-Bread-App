@@ -3,87 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roman Catholic Daily Bread</title>
+    <title>Daily Bread | Catholic Missal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,600&family=Inter:wght@300;400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f4f1ea; }
+        body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .reading-content { line-height: 1.8; color: #374151; font-size: 1.1rem; }
-        .reading-header { color: #065f46; font-family: 'Inter', sans-serif; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 2px solid #ecfdf5; display: block; padding-bottom: 5px; }
+        .reading-section { border-bottom: 1px solid #e7e5e4; padding-bottom: 2rem; margin-bottom: 2rem; }
     </style>
 </head>
-<body class="min-h-screen py-6 px-4 flex flex-col items-center">
+<body class="min-h-screen py-8 px-4 flex justify-center">
 
-    <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden">
+    <div id="app-container" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200">
+        
         <div class="bg-stone-900 p-10 text-white relative">
-            <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2">Wednesday, May 6, 2026</p>
-            <h1 id="day-title" class="serif text-3xl font-bold italic leading-tight">Saints Marian and James</h1>
+            <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2"></p>
+            <h1 id="saint-name" class="serif text-3xl font-bold italic leading-tight">Daily Liturgy</h1>
         </div>
 
         <div class="p-10">
-            <div id="mass-content" class="reading-content">
-                <div id="loader" class="flex flex-col items-center py-20">
-                    <div class="w-10 h-10 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mb-4"></div>
-                    <p class="serif italic text-stone-400">Proclaiming the Word...</p>
+            <section class="reading-section">
+                <h3 class="text-[10px] font-black text-emerald-800 bg-emerald-50 px-2 py-1 rounded inline-block uppercase mb-4 tracking-widest">First Reading</h3>
+                <div id="reading-1-content" class="text-stone-700 leading-relaxed text-lg">
+                    Loading today's scripture...
                 </div>
-                
-                <div id="liturgy-text" class="hidden"></div>
-            </div>
-
-            <section id="prayer-section" class="bg-emerald-900 rounded-[2rem] p-8 text-center text-white mt-10 hidden">
-                <h4 class="serif text-xl font-bold mb-2 italic">Daily Prayer</h4>
-                <p id="prayer-text" class="text-emerald-100 italic text-sm leading-relaxed"></p>
             </section>
+
+            <section class="reading-section bg-stone-50 p-8 rounded-[2rem] border border-stone-100">
+                <h3 class="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-4">Responsorial Psalm</h3>
+                <div id="psalm-content" class="serif text-2xl italic text-emerald-900">
+                    Loading Psalm...
+                </div>
+            </section>
+
+            <section class="reading-section border-none">
+                <h3 class="text-[10px] font-black text-white bg-stone-900 px-3 py-1 rounded inline-block uppercase mb-6 tracking-widest">Holy Gospel</h3>
+                <div id="gospel-content" class="serif text-2xl text-stone-900 leading-relaxed italic border-l-4 border-emerald-600 pl-8">
+                    Proclaiming the Good News...
+                </div>
+            </section>
+
+            <div class="bg-emerald-900 rounded-[2.5rem] p-10 text-center text-white shadow-lg">
+                <h4 class="serif text-2xl font-bold mb-4 italic">Daily Prayer</h4>
+                <p id="dynamic-prayer" class="text-emerald-100 italic leading-relaxed text-lg">
+                    "Lord, guide our hearts by Your Word today. Amen."
+                </p>
+            </div>
         </div>
     </div>
 
-    <p id="help-msg" class="mt-6 text-[10px] text-stone-400 uppercase tracking-widest text-center max-w-xs">
-        If text doesn't appear in 5 seconds, try refreshing your browser.
-    </p>
-
     <script>
-        // FUNCTION TO HANDLE THE DATA
-        function displayLiturgy(data) {
-            const loader = document.getElementById('loader');
-            const liturgyContainer = document.getElementById('liturgy-text');
-            const prayerSection = document.getElementById('prayer-section');
+        // This function handles the data from the Universalis API
+        function universalisCallback(data) {
+            if (!data || !data.Mass_Reading) return;
 
-            if (!data || !data.Mass_Reading) {
-                loader.innerHTML = "<p class='text-red-500'>Liturgy temporarily unavailable. Please try again later.</p>";
-                return;
-            }
-
-            // Update Titles
+            // 1. Update UI with Full Text
             document.getElementById('date-label').innerText = data.date;
-            document.getElementById('day-title').innerText = data.day;
-
-            // Update Content
-            const m = data.Mass_Reading;
-            let html = "";
-            if (m.Reading1) html += `<span class="reading-header">First Reading</span>${m.Reading1.text}`;
-            if (m.Psalm) html += `<span class="reading-header">Responsorial Psalm</span>${m.Psalm.text}`;
-            if (m.Reading2) html += `<span class="reading-header">Second Reading</span>${m.Reading2.text}`;
-            if (m.Gospel) html += `<span class="reading-header">Holy Gospel</span>${m.Gospel.text}`;
-
-            liturgyContainer.innerHTML = html;
-            document.getElementById('prayer-text').innerText = `Lord, through the intercession of ${data.day}, grant that we may remain in You as branches on the True Vine. Amen.`;
-
-            // Reveal everything
-            loader.classList.add('hidden');
-            liturgyContainer.classList.remove('hidden');
-            prayerSection.classList.remove('hidden');
+            document.getElementById('saint-name').innerText = data.day;
+            
+            const mass = data.Mass_Reading;
+            document.getElementById('reading-1-content').innerHTML = mass.Reading1.text;
+            document.getElementById('psalm-content').innerHTML = mass.Psalm.text;
+            document.getElementById('gospel-content').innerHTML = mass.Gospel.text;
+            
+            document.getElementById('dynamic-prayer').innerText = `Heavenly Father, through the intercession of ${data.day}, grant that we may live according to Your Word today. Amen.`;
         }
 
-        // LOAD DATA VIA JSONP (Best for avoiding blocks)
+        // 2. Load the data using a script tag (bypasses most network blocks)
         const script = document.createElement('script');
-        script.src = "https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=displayLiturgy";
+        script.src = "https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=universalisCallback";
         document.body.appendChild(script);
 
-        // Handle error if script fails to load
-        script.onerror = function() {
-            document.getElementById('loader').innerHTML = "<p class='text-red-500'>Network Error. Please check your connection in Puducherry.</p>";
-        };
+        // 3. Update the date immediately so it doesn't look blank
+        const today = new Date();
+        document.getElementById('date-label').innerText = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     </script>
 </body>
 </html>
