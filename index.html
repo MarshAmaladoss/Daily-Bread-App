@@ -3,99 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread | Catholic Missal</title>
+    <title>Daily Bread | Full Catholic Missal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f1ea; color: #1c1917; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .reading-content p { margin-bottom: 1rem; line-height: 1.7; }
+        /* Style the Universalis output to look beautiful */
+        .universalis-content { line-height: 1.8; color: #374151; }
+        .universalis-content b { color: #065f46; display: block; margin-top: 1.5rem; font-family: 'Inter', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; }
+        .universalis-content i { font-family: 'Crimson Pro', serif; font-size: 1.25rem; color: #111827; display: block; margin-bottom: 1rem; }
     </style>
 </head>
 <body class="min-h-screen py-8 px-4 flex justify-center">
 
     <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden hidden">
         
-        <div class="relative h-64 bg-stone-900 flex items-end p-8">
-            <div class="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/paper.png')]"></div>
-            <div class="relative z-10">
+        <div class="relative h-64 bg-stone-900 flex items-end p-10">
+            <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/paper.png')]"></div>
+            <div class="relative z-10 w-full">
                 <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2"></p>
-                <h1 id="saint-name" class="serif text-3xl text-white font-bold italic"></h1>
+                <h1 id="saint-name" class="serif text-3xl text-white font-bold italic leading-tight"></h1>
             </div>
         </div>
 
-        <div class="p-8 space-y-12">
-            
-            <section>
-                <h3 class="text-[10px] font-black text-emerald-800 bg-emerald-50 px-2 py-1 rounded inline-block uppercase mb-4">First Reading</h3>
-                <div id="reading-1" class="text-stone-700 reading-content"></div>
-            </section>
+        <div class="p-10 space-y-12">
+            <div id="mass-content" class="universalis-content text-lg">
+                </div>
 
-            <section class="bg-stone-50 p-8 rounded-3xl border border-stone-100">
-                <h3 class="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-4">Responsorial Psalm</h3>
-                <div id="psalm" class="serif text-lg italic text-emerald-900 reading-content"></div>
-            </section>
-
-            <section>
-                <h3 class="text-[10px] font-black text-white bg-stone-900 px-3 py-1 rounded inline-block uppercase mb-6">Holy Gospel</h3>
-                <div id="gospel" class="serif text-xl text-stone-900 italic border-l-4 border-emerald-600 pl-8 reading-content"></div>
-            </section>
-
-            <section class="bg-emerald-900 rounded-[2rem] p-8 text-center text-white">
-                <h4 class="serif text-xl font-bold mb-2">Daily Prayer</h4>
-                <p id="prayer" class="text-emerald-100 italic text-sm"></p>
+            <section class="bg-emerald-900 rounded-[2rem] p-10 text-center text-white">
+                <h4 class="serif text-2xl font-bold mb-4 italic">Daily Prayer</h4>
+                <p id="prayer-text" class="text-emerald-100 leading-relaxed italic text-lg"></p>
             </section>
         </div>
     </div>
 
-    <div id="loading" class="flex flex-col items-center justify-center min-h-[60vh]">
+    <div id="loading" class="flex flex-col items-center justify-center min-h-[80vh]">
         <div class="w-12 h-12 border-4 border-stone-200 border-t-emerald-800 rounded-full animate-spin mb-4"></div>
-        <p class="serif italic text-stone-500">Consulting the Lectionary...</p>
+        <p class="serif italic text-stone-500 text-xl">Opening the Holy Scriptures...</p>
     </div>
 
     <script>
-        async function loadDailyLiturgy() {
-            try {
-                // 1. Fetch from Universalis (This API provides the full Mass text for today)
-                const response = await fetch('https://www.universalis.com/Europe.England/jsonnext.js');
-                const data = await response.json();
-
-                // 2. Extract Data
-                const dateTitle = data.date;
-                const massData = data.Mass_Reading; // This contains all readings
-                
-                // 3. Update UI
-                document.getElementById('date-label').innerText = dateTitle;
-                document.getElementById('saint-name').innerText = data.day;
-                
-                // Map the readings (Universalis provides them as HTML)
-                // Reading 1
-                document.getElementById('reading-1').innerHTML = massData.Reading1.text;
-                
-                // Psalm
-                document.getElementById('psalm').innerHTML = massData.Psalm.text;
-                
-                // Gospel
-                document.getElementById('gospel').innerHTML = massData.Gospel.text;
-
-                // Prayer
-                document.getElementById('prayer').innerText = `Heavenly Father, through the intercession of ${data.day}, may Your Word guide our hearts and our actions this day. Amen.`;
-
-                // Show App
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('app-card').classList.remove('hidden');
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loading').innerHTML = `
-                    <div class="text-center p-6">
-                        <p class="text-red-600 serif">The Lectionary is temporarily unavailable.</p>
-                        <button onclick="location.reload()" class="mt-4 bg-stone-800 text-white px-6 py-2 rounded-full text-xs">Retry</button>
-                    </div>`;
+        // Fallback in case of error
+        const timeout = setTimeout(() => {
+            if (document.getElementById('app-card').classList.contains('hidden')) {
+                document.getElementById('loading').innerHTML = "<p class='text-red-600'>Connection timed out. Please refresh.</p>";
             }
-        }
+        }, 10000);
 
-        loadDailyLiturgy();
+        function universalisCallback(data) {
+            clearTimeout(timeout);
+            
+            // 1. Update Date and Saint
+            document.getElementById('date-label').innerText = data.date || new Date().toLocaleDateString();
+            document.getElementById('saint-name').innerText = data.day || "Daily Mass";
+
+            // 2. Combine all readings into one view
+            let fullLiturgy = "";
+            if (data.Mass_Reading) {
+                const m = data.Mass_Reading;
+                fullLiturgy += `<b>First Reading</b> ${m.Reading1.text}`;
+                fullLiturgy += `<b>Responsorial Psalm</b> ${m.Psalm.text}`;
+                if (m.Reading2) fullLiturgy += `<b>Second Reading</b> ${m.Reading2.text}`;
+                fullLiturgy += `<b>Holy Gospel</b> ${m.Gospel.text}`;
+            }
+
+            document.getElementById('mass-content').innerHTML = fullLiturgy;
+            
+            // 3. Dynamic Prayer
+            document.getElementById('prayer-text').innerText = `Heavenly Father, through the intercession of ${data.day || 'Your saints'}, may Your Word dwell in us richly today and bear fruit in our lives. Amen.`;
+
+            // 4. Reveal App
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('app-card').classList.remove('hidden');
+        }
     </script>
+
+    <script src="https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=universalisCallback"></script>
+
 </body>
 </html>
