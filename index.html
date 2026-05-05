@@ -9,65 +9,81 @@
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,600&family=Inter:wght@300;400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f1ea; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .reading-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #374151; font-size: 1.1rem; }
-        .reading-content b { display: block; color: #065f46; font-family: 'Inter', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 2rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+        .reading-content { line-height: 1.8; color: #374151; font-size: 1.1rem; }
+        .reading-header { color: #065f46; font-family: 'Inter', sans-serif; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 2px solid #ecfdf5; display: block; padding-bottom: 5px; }
     </style>
 </head>
-<body class="min-h-screen py-6 px-4 flex justify-center">
+<body class="min-h-screen py-6 px-4 flex flex-col items-center">
 
     <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden">
         <div class="bg-stone-900 p-10 text-white relative">
-            <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2"></p>
-            <h1 id="day-title" class="serif text-3xl font-bold italic leading-tight">Daily Liturgy</h1>
+            <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2">Wednesday, May 6, 2026</p>
+            <h1 id="day-title" class="serif text-3xl font-bold italic leading-tight">Saints Marian and James</h1>
         </div>
 
-        <div class="p-10 space-y-12">
+        <div class="p-10">
             <div id="mass-content" class="reading-content">
-                <div class="flex flex-col items-center py-20 text-stone-400">
+                <div id="loader" class="flex flex-col items-center py-20">
                     <div class="w-10 h-10 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mb-4"></div>
-                    <p class="serif italic">Opening the Holy Scriptures...</p>
+                    <p class="serif italic text-stone-400">Proclaiming the Word...</p>
                 </div>
+                
+                <div id="liturgy-text" class="hidden"></div>
             </div>
 
-            <section id="prayer-box" class="bg-emerald-900 rounded-[2rem] p-10 text-center text-white hidden">
-                <h4 class="serif text-2xl font-bold mb-4 italic">Daily Prayer</h4>
-                <p id="prayer-text" class="text-emerald-100 italic leading-relaxed text-lg"></p>
+            <section id="prayer-section" class="bg-emerald-900 rounded-[2rem] p-8 text-center text-white mt-10 hidden">
+                <h4 class="serif text-xl font-bold mb-2 italic">Daily Prayer</h4>
+                <p id="prayer-text" class="text-emerald-100 italic text-sm leading-relaxed"></p>
             </section>
         </div>
     </div>
 
-    <script>
-        // This function handles the data from Universalis (The most complete Catholic source)
-        function universalisCallback(data) {
-            if (!data || !data.Mass_Reading) return;
+    <p id="help-msg" class="mt-6 text-[10px] text-stone-400 uppercase tracking-widest text-center max-w-xs">
+        If text doesn't appear in 5 seconds, try refreshing your browser.
+    </p>
 
-            // 1. Update Header
+    <script>
+        // FUNCTION TO HANDLE THE DATA
+        function displayLiturgy(data) {
+            const loader = document.getElementById('loader');
+            const liturgyContainer = document.getElementById('liturgy-text');
+            const prayerSection = document.getElementById('prayer-section');
+
+            if (!data || !data.Mass_Reading) {
+                loader.innerHTML = "<p class='text-red-500'>Liturgy temporarily unavailable. Please try again later.</p>";
+                return;
+            }
+
+            // Update Titles
             document.getElementById('date-label').innerText = data.date;
             document.getElementById('day-title').innerText = data.day;
 
-            // 2. Build the Full Text
-            let html = "";
+            // Update Content
             const m = data.Mass_Reading;
-            
-            if (m.Reading1) html += `<b>First Reading</b> ${m.Reading1.text}`;
-            if (m.Psalm) html += `<b>Responsorial Psalm</b> ${m.Psalm.text}`;
-            if (m.Reading2) html += `<b>Second Reading</b> ${m.Reading2.text}`;
-            if (m.Gospel) html += `<b>Holy Gospel</b> ${m.Gospel.text}`;
+            let html = "";
+            if (m.Reading1) html += `<span class="reading-header">First Reading</span>${m.Reading1.text}`;
+            if (m.Psalm) html += `<span class="reading-header">Responsorial Psalm</span>${m.Psalm.text}`;
+            if (m.Reading2) html += `<span class="reading-header">Second Reading</span>${m.Reading2.text}`;
+            if (m.Gospel) html += `<span class="reading-header">Holy Gospel</span>${m.Gospel.text}`;
 
-            // 3. Render Content
-            document.getElementById('mass-content').innerHTML = html;
-            document.getElementById('prayer-text').innerText = `Heavenly Father, through the intercession of ${data.day}, grant us the grace to live Your Word today. Amen.`;
-            document.getElementById('prayer-box').classList.remove('hidden');
+            liturgyContainer.innerHTML = html;
+            document.getElementById('prayer-text').innerText = `Lord, through the intercession of ${data.day}, grant that we may remain in You as branches on the True Vine. Amen.`;
+
+            // Reveal everything
+            loader.classList.add('hidden');
+            liturgyContainer.classList.remove('hidden');
+            prayerSection.classList.remove('hidden');
         }
 
-        // Trigger the fetch
+        // LOAD DATA VIA JSONP (Best for avoiding blocks)
         const script = document.createElement('script');
-        // We use the Ireland/UK calendar as it is the most standard English version
-        script.src = "https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=universalisCallback";
+        script.src = "https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=displayLiturgy";
         document.body.appendChild(script);
 
-        // Fallback Date in case of network lag
-        document.getElementById('date-label').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        // Handle error if script fails to load
+        script.onerror = function() {
+            document.getElementById('loader').innerHTML = "<p class='text-red-500'>Network Error. Please check your connection in Puducherry.</p>";
+        };
     </script>
 </body>
 </html>
