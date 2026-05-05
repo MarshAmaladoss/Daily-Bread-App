@@ -3,79 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread</title>
+    <title>Roman Catholic Daily Bread</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@600&family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #fdfbf7; }
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f1ea; }
         .serif { font-family: 'Crimson Pro', serif; }
+        .reading-box::-webkit-scrollbar { width: 4px; }
+        .reading-box::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen py-10 px-4 flex justify-center">
 
-    <div id="app-container" class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-stone-100 hidden">
-        <div class="bg-stone-900 p-8 text-white">
-            <p id="date-label" class="text-stone-400 text-xs font-bold uppercase tracking-widest mb-2"></p>
-            <h1 id="saint-display" class="serif text-3xl font-bold italic leading-tight">Saint of the Day</h1>
+    <div id="app-container" class="max-w-xl w-full bg-white shadow-2xl rounded-[2rem] overflow-hidden hidden">
+        
+        <div class="relative h-64 bg-stone-200">
+            <img id="saint-image" src="https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&q=80&w=1000" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-end p-8 items-end">
+                <div>
+                    <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1"></p>
+                    <h1 id="saint-name" class="serif text-3xl text-white font-bold italic"></h1>
+                </div>
+            </div>
         </div>
-        <div class="p-8 space-y-8">
-            <section class="text-center">
-                <p id="gospel-text" class="serif text-xl text-stone-800 leading-relaxed italic"></p>
-                <p id="gospel-ref" class="text-emerald-700 font-bold text-xs mt-4 uppercase tracking-widest"></p>
+
+        <div class="p-8 space-y-10">
+            
+            <section>
+                <div class="flex items-center space-x-2 mb-6">
+                    <span class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full uppercase">The Holy Gospel</span>
+                </div>
+                <div class="serif text-xl text-stone-900 leading-relaxed italic border-l-4 border-emerald-500 pl-6 py-2" id="gospel-full">
+                    </div>
+                <p id="gospel-ref" class="text-right text-sm font-bold text-stone-500 mt-4 uppercase"></p>
             </section>
-            <section class="bg-stone-50 rounded-3xl p-6 border border-stone-100">
-                <p id="prayer-display" class="text-stone-700 text-sm leading-relaxed text-center italic"></p>
+
+            <section>
+                <h3 class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">Daily Mass Readings</h3>
+                <div class="reading-box max-h-80 overflow-y-auto space-y-6 pr-4 text-stone-700 text-sm leading-relaxed" id="all-readings">
+                    </div>
             </section>
+
+            <section class="bg-stone-50 rounded-3xl p-8 border border-stone-100 text-center">
+                <h4 class="serif text-lg font-bold text-stone-800 mb-2">Daily Prayer</h4>
+                <p id="prayer-text" class="text-stone-600 italic"></p>
+            </section>
+
+        </div>
+
+        <div class="p-8 pt-0 text-center">
+            <button onclick="window.print()" class="text-xs text-stone-400 underline uppercase tracking-widest">Print Today's Missal</button>
         </div>
     </div>
 
-    <div id="loading" class="text-center">
-        <div class="w-12 h-12 border-4 border-stone-200 border-t-emerald-800 rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="serif italic text-stone-500">Opening the Word...</p>
+    <div id="loading" class="flex flex-col items-center justify-center space-y-4">
+        <div class="w-10 h-10 border-4 border-stone-200 border-t-emerald-700 rounded-full animate-spin"></div>
+        <p class="serif italic text-stone-500">Preparing the Liturgy...</p>
     </div>
 
     <script>
-        async function initApp() {
-            // Setup Timeout for slow APIs
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000); 
-
+        async function fetchLiturgy() {
             try {
-                // 1. Set Date
+                // 1. Get Liturgical Info
+                const calRes = await fetch('https://calapi.inadiutorium.cz/api/v0/en/calendars/default/today');
+                const calData = await calRes.json();
+                const saint = calData.celebrations[0]?.title || "Ordinary Time";
+                
+                // 2. Fetch Scriptural Content (Using John 15:1-8 for today's Catholic Mass)
+                const bibleRes = await fetch('https://bible-api.com/john+15:1-8');
+                const bibleData = await bibleRes.json();
+
+                // 3. Populate UI
                 document.getElementById('date-label').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                document.getElementById('saint-name').innerText = saint;
+                document.getElementById('gospel-full').innerText = bibleData.text;
+                document.getElementById('gospel-ref').innerText = bibleData.reference;
+                
+                // Add first reading as placeholder for "All Readings"
+                document.getElementById('all-readings').innerHTML = `
+                    <div>
+                        <p class="font-bold text-emerald-900 mb-1 uppercase text-[10px]">First Reading</p>
+                        <p>Acts 15:1-6: Some who had come down from Judea were instructing the brothers, "Unless you are circumcised according to the Mosaic practice, you cannot be saved..."</p>
+                    </div>
+                    <hr class="opacity-30">
+                    <div>
+                        <p class="font-bold text-emerald-900 mb-1 uppercase text-[10px]">Responsorial Psalm</p>
+                        <p>Psalm 122: Let us go rejoicing to the house of the Lord.</p>
+                    </div>
+                `;
 
-                // 2. Fetch Data
-                let saint = "St. Marian & St. James"; // Fallback for May 6
-                let verse = "I am the way, and the truth, and the life.";
-                let ref = "John 14:6";
+                document.getElementById('prayer-text').innerText = `Heavenly Father, as we honor ${saint}, let us remain in You as branches on the True Vine. May Your Word prune us and make us fruitful for Your Kingdom. Amen.`;
 
-                try {
-                    const calRes = await fetch('https://calapi.inadiutorium.cz/api/v0/en/calendars/default/today', { signal: controller.signal });
-                    const calData = await calRes.json();
-                    saint = calData.celebrations[0]?.title || saint;
-
-                    const bibleRes = await fetch('https://bible-api.com/john+14:6');
-                    const bibleData = await bibleRes.json();
-                    verse = bibleData.text.trim();
-                    ref = bibleData.reference;
-                } catch (e) {
-                    console.log("Using built-in fallback data.");
-                }
-
-                // 3. Render
-                document.getElementById('saint-display').innerText = saint;
-                document.getElementById('gospel-text').innerText = `"${verse}"`;
-                document.getElementById('gospel-ref').innerText = ref;
-                document.getElementById('prayer-display').innerText = `Lord, as we honor ${saint} today, help us to follow Your path with courage. Amen.`;
+                // Update Image Search Link (Placeholder used here, in a real app you'd link to a database)
+                // document.getElementById('saint-image').src = `URL_TO_IMAGE`;
 
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
 
             } catch (err) {
-                document.getElementById('loading').innerHTML = "Something went wrong. Please refresh.";
+                console.error(err);
+                document.getElementById('loading').innerText = "Failed to load liturgy. Please check your connection.";
             }
         }
-        initApp();
+
+        fetchLiturgy();
     </script>
 </body>
 </html>
