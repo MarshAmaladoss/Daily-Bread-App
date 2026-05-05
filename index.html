@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Bread | Integrated</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@300;400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #fdfbf7; }
+        .serif { font-family: 'Crimson Pro', serif; }
+        .card { transition: all 0.3s ease; }
+        .loader { border-top-color: #065f46; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app-container" class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-stone-100 hidden">
+        
+        <div class="bg-stone-900 p-8 text-white relative">
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="white"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/></svg>
+            </div>
+            <p id="date-label" class="text-stone-400 text-xs font-bold uppercase tracking-[0.2em] mb-2"></p>
+            <h1 id="saint-display" class="serif text-3xl font-bold italic leading-tight">Saint of the Day</h1>
+        </div>
+
+        <div class="p-8 space-y-8">
+            <section>
+                <div class="flex items-center space-x-3 mb-4">
+                    <span class="h-px flex-1 bg-stone-200"></span>
+                    <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Holy Gospel</span>
+                    <span class="h-px flex-1 bg-stone-200"></span>
+                </div>
+                <div class="relative">
+                    <p id="gospel-text" class="serif text-xl text-stone-800 leading-relaxed italic text-center px-4"></p>
+                    <p id="gospel-ref" class="text-center text-emerald-700 font-bold text-xs mt-4 uppercase tracking-widest"></p>
+                </div>
+            </section>
+
+            <section class="bg-stone-50 rounded-3xl p-6 border border-stone-100">
+                <h3 class="text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-3 flex items-center">
+                    Daily Prayer
+                </h3>
+                <p id="prayer-display" class="text-stone-700 text-sm leading-relaxed"></p>
+            </section>
+        </div>
+
+        <div class="px-8 pb-8 text-center">
+            <p class="text-[9px] text-stone-400 uppercase tracking-widest">Updated via Inadiutorium & Bible-API</p>
+        </div>
+    </div>
+
+    <div id="loading" class="text-center">
+        <div class="loader w-12 h-12 border-4 border-stone-200 rounded-full mx-auto mb-4"></div>
+        <p class="serif italic text-stone-500">Preparing today's devotion...</p>
+    </div>
+
+    <script>
+        async function initApp() {
+            try {
+                // 1. Get Liturgical Data
+                const calRes = await fetch('https://calapi.inadiutorium.cz/api/v0/en/calendars/default/today');
+                const calData = await calRes.json();
+                
+                // Extract Saint/Celebration
+                const celebration = calData.celebrations[0];
+                const saintName = celebration.title;
+                const liturgicalColor = celebration.colour; // 'white', 'red', 'green', 'violet'
+
+                // 2. Map Color to Scripture (Creative logic: Red = Sacrifice, White = Peace, etc.)
+                let verseRef = "John 14:27"; // Default: Peace
+                if(liturgicalColor === 'red') verseRef = "John 15:13"; // Sacrifice
+                if(liturgicalColor === 'violet') verseRef = "Psalm 51:10"; // Repentance
+
+                // 3. Fetch Bible Verse
+                const bibleRes = await fetch(`https://bible-api.com/${verseRef}`);
+                const bibleData = await bibleRes.json();
+
+                // 4. Update UI
+                document.getElementById('date-label').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                document.getElementById('saint-display').innerText = saintName;
+                document.getElementById('gospel-text').innerText = `"${bibleData.text.trim()}"`;
+                document.getElementById('gospel-ref').innerText = bibleData.reference;
+                
+                document.getElementById('prayer-display').innerText = 
+                    `Heavenly Father, as we honor ${saintName} today, grant us the grace to embody the virtues they showed. May the words of ${bibleData.reference} guide our steps and bring us closer to Your light. Amen.`;
+
+                // Show App, Hide Loader
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                document.body.innerHTML = "<p class='text-center serif'>Connection failed. Please check your internet.</p>";
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
