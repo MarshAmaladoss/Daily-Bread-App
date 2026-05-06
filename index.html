@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread | Integrated General Missal</title>
+    <title>Daily Bread | Full Bible Integrated</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #1c1917; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .reading-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #374151; font-size: 1.15rem; }
+        .reading-text p { margin-bottom: 1.5rem; line-height: 1.8; color: #374151; font-size: 1.15rem; }
         .label { color: #065f46; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 3rem; margin-bottom: 1rem; border-bottom: 2px solid #ecfdf5; display: block; padding-bottom: 5px; }
     </style>
 </head>
-<body class="min-h-screen py-8 px-4 flex justify-center">
+<body class="min-h-screen py-8 px-4 flex flex-col items-center">
 
-    <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200">
-        
-        <div class="bg-stone-900 p-10 text-white relative">
+    <div class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200">
+        <div class="bg-stone-900 p-10 text-white">
             <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2"></p>
             <h1 id="saint-name" class="serif text-3xl font-bold italic leading-tight">Daily Liturgy</h1>
-            <p id="saint-context" class="text-stone-400 text-[10px] uppercase tracking-widest mt-2"></p>
+        </div>
+
+        <div class="p-6 bg-stone-50 border-b border-stone-200 flex gap-2">
+            <input id="bible-search" type="text" placeholder="Search (e.g. John 3:16)" class="flex-1 px-4 py-2 rounded-full border border-stone-300 text-sm focus:outline-emerald-800">
+            <button onclick="searchBible()" class="bg-emerald-800 text-white px-6 py-2 rounded-full text-sm font-bold shadow-md">Open Bible</button>
         </div>
 
         <div class="p-10">
-            <div id="mass-content" class="reading-content">
+            <div id="main-content" class="reading-text">
                 <div class="flex flex-col items-center py-20 text-stone-300">
                     <div class="w-10 h-10 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mb-4"></div>
                     <p class="serif italic">Opening the Scriptures...</p>
@@ -39,44 +42,55 @@
     </div>
 
     <script>
-        // ENGINE 1: The Data Handler
+        // 1. DYNAMIC BIBLE SEARCH (The Full Bible Feature)
+        async function searchBible() {
+            const query = document.getElementById('bible-search').value;
+            if (!query) return;
+
+            const content = document.getElementById('main-content');
+            content.innerHTML = "<p class='serif italic text-stone-400'>Consulting the Sacred Text...</p>";
+
+            try {
+                const response = await fetch(`https://bible-api.com/${query}`);
+                const data = await response.json();
+                
+                if (data.text) {
+                    content.innerHTML = `
+                        <span class="label">Holy Scripture: ${data.reference}</span>
+                        <div class="serif text-2xl text-stone-900 leading-relaxed italic border-l-4 border-emerald-600 pl-8 py-2">
+                            ${data.text}
+                        </div>
+                        <button onclick="location.reload()" class="mt-8 text-xs text-emerald-800 font-bold uppercase tracking-widest">← Back to Today's Readings</button>
+                    `;
+                } else {
+                    content.innerHTML = "<p class='text-red-600'>Verse not found. Use format like 'John 3:16' or 'Genesis 1'.</p>";
+                }
+            } catch (e) {
+                content.innerHTML = "<p class='text-red-600'>Error connecting to Bible database. Please check your internet.</p>";
+            }
+        }
+
+        // 2. DAILY MASS READINGS ENGINE
         function renderLiturgy(data) {
             if (!data || !data.Mass_Reading) return;
-
-            // Update Header
             document.getElementById('date-label').innerText = data.date;
             document.getElementById('saint-name').innerText = data.day;
             
-            // Dynamic Saint Memory
-            if(data.day.toLowerCase().includes("marian")) {
-                document.getElementById('saint-context').innerText = "Martyrs of Numidia (d. 259 AD)";
-            }
-
             const m = data.Mass_Reading;
             let fullText = "";
-            
-            // Build the full integrated readings from the API memory
             if (m.Reading1) fullText += `<span class="label">First Reading</span>${m.Reading1.text}`;
             if (m.Psalm) fullText += `<span class="label">Responsorial Psalm</span><div class="serif italic text-emerald-900 text-xl">${m.Psalm.text}</div>`;
-            if (m.Reading2) fullText += `<span class="label">Second Reading</span>${m.Reading2.text}`;
-            
-            // Full Gospel Integration
-            if (m.Gospel) {
-                fullText += `<span class="label">Holy Gospel</span>`;
-                fullText += `<div class="serif italic border-l-4 border-emerald-600 pl-8 py-2 text-2xl text-stone-900">${m.Gospel.text}</div>`;
-            }
+            if (m.Gospel) fullText += `<span class="label">Holy Gospel</span><div class="serif italic border-l-4 border-emerald-600 pl-8 py-2 text-2xl text-stone-900">${m.Gospel.text}</div>`;
 
-            document.getElementById('mass-content').innerHTML = fullText;
-            document.getElementById('prayer-text').innerText = `Heavenly Father, through the intercession of ${data.day}, help us to remember and live Your Word today. Amen.`;
+            document.getElementById('main-content').innerHTML = fullText;
+            document.getElementById('prayer-text').innerText = `Heavenly Father, through the intercession of ${data.day}, guide our path today. Amen.`;
         }
 
-        // ENGINE 2: The Network Bridge (Bypasses Indian ISP blocks)
+        // 3. STARTUP
         const script = document.createElement('script');
-        // Use unique timestamp to prevent "Still Loading" cached errors
         script.src = `https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=renderLiturgy&cb=${new Date().getTime()}`;
         document.body.appendChild(script);
 
-        // Immediate Date Display (Zero-Latency)
         const today = new Date();
         document.getElementById('date-label').innerText = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     </script>
