@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread | Full Gospel Integrated</title>
+    <title>Daily Bread | Integrated General Missal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,600&family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #1c1917; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .reading-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #374151; font-size: 1.1rem; }
+        .reading-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #374151; font-size: 1.15rem; }
         .label { color: #065f46; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 3rem; margin-bottom: 1rem; border-bottom: 2px solid #ecfdf5; display: block; padding-bottom: 5px; }
     </style>
 </head>
 <body class="min-h-screen py-8 px-4 flex justify-center">
 
-    <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200 hidden">
+    <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200">
+        
         <div class="bg-stone-900 p-10 text-white relative">
             <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2"></p>
             <h1 id="saint-name" class="serif text-3xl font-bold italic leading-tight">Daily Liturgy</h1>
@@ -24,30 +25,29 @@
 
         <div class="p-10">
             <div id="mass-content" class="reading-content">
+                <div class="flex flex-col items-center py-20 text-stone-300">
+                    <div class="w-10 h-10 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mb-4"></div>
+                    <p class="serif italic">Opening the Scriptures...</p>
                 </div>
+            </div>
 
             <div class="bg-emerald-900 rounded-[2.5rem] p-10 text-center text-white shadow-lg mt-12">
                 <h4 class="serif text-2xl font-bold mb-4 italic">Daily Prayer</h4>
-                <p id="prayer-text" class="text-emerald-100 italic leading-relaxed text-lg"></p>
+                <p id="prayer-text" class="text-emerald-100 italic leading-relaxed text-lg">"Lord, let Your Word dwell in us richly today. Amen."</p>
             </div>
         </div>
     </div>
 
-    <div id="loading" class="flex flex-col items-center justify-center min-h-[80vh] text-center px-6">
-        <div class="w-12 h-12 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mb-6"></div>
-        <p id="status-text" class="serif italic text-stone-500 text-xl">Opening the Holy Scriptures...</p>
-        <button id="retry-btn" onclick="location.reload()" class="hidden mt-6 bg-stone-900 text-white px-8 py-2 rounded-full text-xs">Force Refresh</button>
-    </div>
-
     <script>
-        // Callback function to handle full unabridged text
-        function handleData(data) {
+        // ENGINE 1: The Data Handler
+        function renderLiturgy(data) {
             if (!data || !data.Mass_Reading) return;
 
+            // Update Header
             document.getElementById('date-label').innerText = data.date;
             document.getElementById('saint-name').innerText = data.day;
             
-            // Auto-detect saint context for memory
+            // Dynamic Saint Memory
             if(data.day.toLowerCase().includes("marian")) {
                 document.getElementById('saint-context').innerText = "Martyrs of Numidia (d. 259 AD)";
             }
@@ -55,36 +55,30 @@
             const m = data.Mass_Reading;
             let fullText = "";
             
-            // Build the full integrated readings
+            // Build the full integrated readings from the API memory
             if (m.Reading1) fullText += `<span class="label">First Reading</span>${m.Reading1.text}`;
             if (m.Psalm) fullText += `<span class="label">Responsorial Psalm</span><div class="serif italic text-emerald-900 text-xl">${m.Psalm.text}</div>`;
             if (m.Reading2) fullText += `<span class="label">Second Reading</span>${m.Reading2.text}`;
             
-            // Full Gospel Memory
+            // Full Gospel Integration
             if (m.Gospel) {
                 fullText += `<span class="label">Holy Gospel</span>`;
                 fullText += `<div class="serif italic border-l-4 border-emerald-600 pl-8 py-2 text-2xl text-stone-900">${m.Gospel.text}</div>`;
             }
 
             document.getElementById('mass-content').innerHTML = fullText;
-            document.getElementById('prayer-text').innerText = `Lord, through the intercession of ${data.day}, help us to remember and live Your Word today. Amen.`;
-
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('app-card').classList.remove('hidden');
+            document.getElementById('prayer-text').innerText = `Heavenly Father, through the intercession of ${data.day}, help us to remember and live Your Word today. Amen.`;
         }
 
-        // Integrated Bridge: Bypasses Indian ISP blocks
+        // ENGINE 2: The Network Bridge (Bypasses Indian ISP blocks)
         const script = document.createElement('script');
-        script.src = `https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=handleData&cb=${new Date().getTime()}`;
+        // Use unique timestamp to prevent "Still Loading" cached errors
+        script.src = `https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=renderLiturgy&cb=${new Date().getTime()}`;
         document.body.appendChild(script);
 
-        // Safety Trigger: If network is slow in Puducherry
-        setTimeout(() => {
-            if (document.getElementById('app-card').classList.contains('hidden')) {
-                document.getElementById('status-text').innerText = "Connection is slow. Trying a hard refresh...";
-                document.getElementById('retry-btn').classList.remove('hidden');
-            }
-        }, 8000);
+        // Immediate Date Display (Zero-Latency)
+        const today = new Date();
+        document.getElementById('date-label').innerText = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     </script>
 </body>
 </html>
