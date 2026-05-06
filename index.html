@@ -3,60 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread | Roman Catholic</title>
+    <title>Daily Bread | Full Gospel Integrated</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,600&family=Inter:wght@300;400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f4f1ea; }
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,600&family=Inter:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #1c1917; }
         .serif { font-family: 'Crimson Pro', serif; }
+        .reading-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #374151; font-size: 1.1rem; }
+        .label { color: #065f46; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 3rem; margin-bottom: 1rem; border-bottom: 2px solid #ecfdf5; display: block; padding-bottom: 5px; }
     </style>
 </head>
-<body class="min-h-screen py-6 px-4 flex justify-center">
+<body class="min-h-screen py-8 px-4 flex justify-center">
 
-    <div id="app-container" class="max-w-xl w-full bg-white shadow-2xl rounded-[2rem] overflow-hidden">
-        
-        <div class="relative h-72 bg-stone-200">
-            <img id="saint-image" src="https://catholicsaints.info/wp-content/uploads/saints-marian-and-james.jpg" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1544427920-c49ccfb85579?q=80&w=1000'">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-end p-8 items-end">
-                <div>
-                    <p class="text-emerald-400 text-xs font-bold uppercase tracking-[0.3em] mb-1">Wednesday, May 6, 2026</p>
-                    <h1 class="serif text-3xl text-white font-bold italic">Saints Marian and James</h1>
+    <div id="app-card" class="max-w-2xl w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200 hidden">
+        <div class="bg-stone-900 p-10 text-white relative">
+            <p id="date-label" class="text-emerald-400 text-xs font-bold uppercase tracking-[0.4em] mb-2"></p>
+            <h1 id="saint-name" class="serif text-3xl font-bold italic leading-tight">Daily Liturgy</h1>
+            <p id="saint-context" class="text-stone-400 text-[10px] uppercase tracking-widest mt-2"></p>
+        </div>
+
+        <div class="p-10">
+            <div id="mass-content" class="reading-content">
                 </div>
+
+            <div class="bg-emerald-900 rounded-[2.5rem] p-10 text-center text-white shadow-lg mt-12">
+                <h4 class="serif text-2xl font-bold mb-4 italic">Daily Prayer</h4>
+                <p id="prayer-text" class="text-emerald-100 italic leading-relaxed text-lg"></p>
             </div>
         </div>
-
-        <div class="p-8 space-y-10">
-            
-            <section class="space-y-6">
-                <div>
-                    <h3 class="text-[10px] font-black text-emerald-800 bg-emerald-50 px-2 py-1 rounded inline-block uppercase mb-3">First Reading: Acts 15:1-6</h3>
-                    <p class="text-stone-700 text-sm leading-relaxed">Some who had come down from Judea were instructing the brothers, "Unless you are circumcised according to the Mosaic practice, you cannot be saved." Because there arose no little dissension and debate by Paul and Barnabas with them...</p>
-                </div>
-
-                <div>
-                    <h3 class="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">Responsorial Psalm: Ps 122</h3>
-                    <p class="serif text-lg italic text-stone-800 underline decoration-emerald-200">R. Let us go rejoicing to the house of the Lord.</p>
-                </div>
-            </section>
-
-            <section class="border-t border-stone-100 pt-8">
-                <h3 class="text-[10px] font-black text-white bg-stone-900 px-3 py-1 rounded inline-block uppercase mb-6">Holy Gospel: John 15:1-8</h3>
-                <div class="serif text-xl text-stone-900 leading-relaxed italic pr-4">
-                    "Jesus said to his disciples: 'I am the true vine, and my Father is the vine grower. He takes away every branch in me that does not bear fruit, and every one that does he prunes so that it bears more fruit... Remain in me, as I remain in you. I am the vine, you are the branches. Whoever remains in me and I in him will bear much fruit, because without me you can do nothing.'"
-                </div>
-            </section>
-
-            <section class="bg-stone-50 rounded-3xl p-8 border border-stone-100 text-center">
-                <h4 class="serif text-lg font-bold text-stone-800 mb-2">Daily Prayer</h4>
-                <p class="text-stone-600 italic text-sm">
-                    "Lord, help me to remain in You today as a branch on the vine. Through the intercession of the martyrs Saints Marian and James, give me courage to bear fruit for Your glory. Amen."
-                </p>
-            </section>
-        </div>
-
-        <div class="p-8 pt-0 text-center text-[9px] text-stone-400 uppercase tracking-widest">
-            Roman Catholic Lectionary | May 6, 2026
-        </div>
     </div>
+
+    <div id="loading" class="flex flex-col items-center justify-center min-h-[80vh] text-center px-6">
+        <div class="w-12 h-12 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mb-6"></div>
+        <p id="status-text" class="serif italic text-stone-500 text-xl">Opening the Holy Scriptures...</p>
+        <button id="retry-btn" onclick="location.reload()" class="hidden mt-6 bg-stone-900 text-white px-8 py-2 rounded-full text-xs">Force Refresh</button>
+    </div>
+
+    <script>
+        // Callback function to handle full unabridged text
+        function handleData(data) {
+            if (!data || !data.Mass_Reading) return;
+
+            document.getElementById('date-label').innerText = data.date;
+            document.getElementById('saint-name').innerText = data.day;
+            
+            // Auto-detect saint context for memory
+            if(data.day.toLowerCase().includes("marian")) {
+                document.getElementById('saint-context').innerText = "Martyrs of Numidia (d. 259 AD)";
+            }
+
+            const m = data.Mass_Reading;
+            let fullText = "";
+            
+            // Build the full integrated readings
+            if (m.Reading1) fullText += `<span class="label">First Reading</span>${m.Reading1.text}`;
+            if (m.Psalm) fullText += `<span class="label">Responsorial Psalm</span><div class="serif italic text-emerald-900 text-xl">${m.Psalm.text}</div>`;
+            if (m.Reading2) fullText += `<span class="label">Second Reading</span>${m.Reading2.text}`;
+            
+            // Full Gospel Memory
+            if (m.Gospel) {
+                fullText += `<span class="label">Holy Gospel</span>`;
+                fullText += `<div class="serif italic border-l-4 border-emerald-600 pl-8 py-2 text-2xl text-stone-900">${m.Gospel.text}</div>`;
+            }
+
+            document.getElementById('mass-content').innerHTML = fullText;
+            document.getElementById('prayer-text').innerText = `Lord, through the intercession of ${data.day}, help us to remember and live Your Word today. Amen.`;
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('app-card').classList.remove('hidden');
+        }
+
+        // Integrated Bridge: Bypasses Indian ISP blocks
+        const script = document.createElement('script');
+        script.src = `https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=handleData&cb=${new Date().getTime()}`;
+        document.body.appendChild(script);
+
+        // Safety Trigger: If network is slow in Puducherry
+        setTimeout(() => {
+            if (document.getElementById('app-card').classList.contains('hidden')) {
+                document.getElementById('status-text').innerText = "Connection is slow. Trying a hard refresh...";
+                document.getElementById('retry-btn').classList.remove('hidden');
+            }
+        }, 8000);
+    </script>
 </body>
 </html>
