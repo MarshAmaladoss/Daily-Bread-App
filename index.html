@@ -3,141 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Bread | Catholic Missal</title>
+    <title>Daily Bread | Click-to-Read Missal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,600&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #1c1917; }
         .serif { font-family: 'Crimson Pro', serif; }
         
-        /* Reading Cards */
-        .reading-card { border-left: 5px solid #065f46; padding: 1.25rem; margin-bottom: 1rem; cursor: pointer; border-radius: 0 1.5rem 1.5rem 0; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: 0.2s; }
-        .reading-card:hover { transform: translateX(5px); background-color: #f0fdf4; }
-
-        /* Dropdown Styling */
-        #calendar-drop { display: none; position: absolute; top: 100%; right: 0; background: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border-radius: 1rem; width: 220px; z-index: 50; max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; }
-        #calendar-drop button { width: 100%; padding: 12px 20px; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
-        #calendar-drop button:hover { background: #f0fdf4; color: #065f46; }
-        .show { display: block !important; }
-
-        /* Scripture Overlay */
-        #bible-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; padding: 1.5rem; backdrop-filter: blur(4px); }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 50; border-radius: 12px; max-height: 250px; overflow-y: auto; right: 0; }
+        .dropdown-content button { width: 100%; padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        
+        .reading-card { border-left: 4px solid #065f46; padding: 1rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s; border-radius: 0 1rem 1rem 0; }
+        .reading-card:hover { background-color: #f0fdf4; border-left-width: 8px; }
+        
+        /* Full Scripture Overlay */
+        #bible-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; padding: 2rem; }
     </style>
 </head>
-<body class="min-h-screen py-8 px-4 flex flex-col items-center space-y-6">
+<body class="min-h-screen py-6 px-4 flex flex-col items-center space-y-6">
 
     <div id="bible-overlay" onclick="closeBible()">
-        <div class="max-w-xl mx-auto bg-white rounded-[2.5rem] p-8 mt-10 shadow-2xl relative" onclick="event.stopPropagation()">
+        <div class="max-w-xl mx-auto bg-white rounded-[2rem] p-8 mt-10 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h3 id="overlay-title" class="serif text-2xl font-bold italic text-emerald-900">Scripture</h3>
-                <button onclick="closeBible()" class="text-stone-400 text-2xl">✕</button>
+                <button onclick="closeBible()" class="text-stone-400 hover:text-stone-800">✕ Close</button>
             </div>
-            <div id="overlay-content" class="serif text-xl leading-relaxed text-stone-800 italic max-h-[60vh] overflow-y-auto pr-2">
-                Proclaiming...
+            <div id="overlay-content" class="serif text-xl leading-relaxed text-stone-800 italic">
+                Loading...
             </div>
         </div>
     </div>
 
-    <div class="max-w-md w-full bg-white shadow-2xl rounded-[3rem] overflow-hidden border border-stone-200">
-        <div class="bg-stone-900 p-10 text-white relative">
+    <div class="max-w-md w-full bg-white shadow-2xl rounded-[2.5rem] overflow-hidden border border-stone-200">
+        <div class="bg-stone-900 p-8 text-white relative">
             <div class="flex justify-between items-start">
                 <div>
-                    <p id="display-date" class="text-emerald-400 text-[10px] font-bold uppercase tracking-[0.4em] mb-2"></p>
-                    <h1 id="display-saint" class="serif text-4xl font-bold italic leading-tight">Daily Liturgy</h1>
+                    <p id="display-date" class="text-emerald-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-1">Wednesday, May 6, 2026</p>
+                    <h2 id="display-saint" class="serif text-3xl font-bold italic">Saints Marian and James</h2>
+                    <p id="display-type" class="text-red-400 text-[10px] uppercase font-black tracking-widest mt-1">Martyrs</p>
                 </div>
                 <div class="relative">
-                    <button onclick="toggleCalendar()" class="bg-white/10 p-3 rounded-xl">📅</button>
-                    <div id="calendar-drop"></div>
+                    <button onclick="toggleDropdown()" class="bg-white/10 p-2 rounded-lg">📅</button>
+                    <div id="calendar-dropdown" class="dropdown-content text-stone-800"></div>
                 </div>
             </div>
         </div>
         
         <div class="p-8">
-            <p class="text-[10px] text-stone-400 uppercase font-bold text-center mb-8 tracking-widest">Tap to read full Bible text</p>
+            <p class="text-[10px] text-stone-400 uppercase font-bold text-center mb-6 tracking-[0.2em]">Tap a reference to read full text</p>
             
-            <div id="liturgy-list" class="space-y-4">
-                </div>
+            <div onclick="openBible(document.getElementById('ref-1').innerText)" class="reading-card">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">First Reading</span>
+                <p id="ref-1" class="text-lg font-bold text-stone-800">Acts 15:1-6</p>
+            </div>
 
-            <div class="mt-12 pt-8 border-t text-center">
-                <p class="text-[10px] text-stone-400 uppercase font-bold mb-3 tracking-widest">Daily Prayer</p>
-                <p id="display-prayer" class="serif italic text-stone-700 text-xl leading-relaxed">
-                    "Lord, let Your Word dwell in us richly today. Amen."
+            <div onclick="openBible(document.getElementById('ref-psalm').innerText)" class="reading-card">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Responsorial Psalm</span>
+                <p id="ref-psalm" class="text-lg font-bold text-stone-800">Psalm 122</p>
+            </div>
+
+            <div onclick="openBible(document.getElementById('ref-gospel').innerText)" class="reading-card border-emerald-800 bg-emerald-50">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Holy Gospel</span>
+                <p id="ref-gospel" class="text-xl font-bold text-stone-900">John 15:1-8</p>
+            </div>
+
+            <div class="mt-8 pt-6 border-t text-center">
+                <p class="text-[10px] text-stone-400 uppercase font-bold mb-2">Daily Prayer</p>
+                <p id="display-prayer" class="serif italic text-stone-700 text-lg leading-relaxed">
+                    "Lord, help us to remain in You as branches on the True Vine. Amen."
                 </p>
             </div>
         </div>
     </div>
 
-    <div class="max-w-md w-full bg-emerald-950 shadow-xl rounded-[2.5rem] p-8 text-white">
-        <h3 class="serif text-xl mb-4 italic text-center">Whole Bible Library</h3>
+    <div class="max-w-md w-full bg-emerald-900 shadow-xl rounded-[2rem] p-6 text-white">
+        <h3 class="serif text-lg mb-3 italic">Whole Bible Search</h3>
         <div class="flex gap-2">
-            <input id="bible-input" type="text" placeholder="e.g. Genesis 1:1" class="flex-1 bg-white/10 border border-white/10 rounded-full px-5 py-3 text-sm text-white focus:outline-none placeholder:text-emerald-700">
-            <button onclick="openBible(document.getElementById('bible-input').value)" class="bg-emerald-600 text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg">Open</button>
+            <input id="bible-input" type="text" placeholder="e.g. Genesis 1" class="flex-1 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm text-white focus:outline-none">
+            <button onclick="openBible(document.getElementById('bible-input').value)" class="bg-white text-emerald-900 px-5 py-2 rounded-full text-sm font-bold">Open</button>
         </div>
     </div>
 
     <script>
-        function updateUI(data) {
-            if (!data || !data.Mass_Reading) return;
-            document.getElementById('display-date').innerText = data.date;
-            document.getElementById('display-saint').innerText = data.day;
-            
-            const m = data.Mass_Reading;
-            let listHtml = "";
-            
-            // Sequential display of readings as provided by the source
-            if (m.Reading1) listHtml += createCard("First Reading", m.Reading1.source);
-            if (m.Psalm) listHtml += createCard("Responsorial Psalm", m.Psalm.source);
-            if (m.Gospel) listHtml += createCard("Holy Gospel", m.Gospel.source, true);
+        const dailyData = {
+            "6": { date: "Wednesday, May 6", saint: "Saints Marian and James", type: "Martyrs", r1: "Acts 15:1-6", ps: "Psalm 122", gs: "John 15:1-8" },
+            "7": { date: "Thursday, May 7", saint: "Saint Rose Venerini", type: "Virgin", r1: "Acts 15:7-21", ps: "Psalm 96", gs: "John 15:9-11" }
+        };
 
-            document.getElementById('liturgy-list').innerHTML = listHtml;
-            document.getElementById('display-prayer').innerText = `Heavenly Father, through the intercession of ${data.day}, grant us grace today. Amen.`;
-        }
-
-        function createCard(title, ref, isGospel = false) {
-            return `<div onclick="openBible('${ref}')" class="reading-card ${isGospel ? 'bg-emerald-50' : 'bg-white'}">
-                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest block mb-1">${title}</span>
-                <p class="text-xl font-bold text-stone-800">${ref}</p>
-            </div>`;
+        function toggleDropdown() { document.getElementById("calendar-dropdown").classList.toggle("show"); }
+        
+        function selectDate(day) {
+            const data = dailyData[day] || dailyData["6"];
+            document.getElementById('display-date').innerText = data.date + ", 2026";
+            document.getElementById('display-saint').innerText = data.saint;
+            document.getElementById('display-type').innerText = data.type;
+            document.getElementById('ref-1').innerText = data.r1;
+            document.getElementById('ref-psalm').innerText = data.ps;
+            document.getElementById('ref-gospel').innerText = data.gs;
+            toggleDropdown();
         }
 
         async function openBible(ref) {
             if (!ref) return;
             const overlay = document.getElementById('bible-overlay');
+            const content = document.getElementById('overlay-content');
+            const title = document.getElementById('overlay-title');
+            
             overlay.style.display = 'block';
-            document.getElementById('overlay-title').innerText = ref;
+            content.innerText = "Consulting the Holy Scriptures...";
+            title.innerText = ref;
+
             try {
-                const res = await fetch(`https://bible-api.com/${ref}`);
-                const data = await res.json();
-                document.getElementById('overlay-content').innerHTML = data.text ? data.text.replace(/\n/g, '<br><br>') : "Not found.";
-            } catch (e) { document.getElementById('overlay-content').innerText = "Network Error."; }
+                const response = await fetch(`https://bible-api.com/${ref}`);
+                const data = await response.json();
+                content.innerHTML = data.text ? data.text.replace(/\n/g, '<br><br>') : "Reference not found.";
+            } catch (e) { content.innerText = "Connection error. Please try again."; }
         }
 
         function closeBible() { document.getElementById('bible-overlay').style.display = 'none'; }
-        function toggleCalendar() { document.getElementById('calendar-drop').classList.toggle('show'); }
-
-        function loadDate(day) {
-            const dateKey = `202605${day < 10 ? '0'+day : day}`;
-            const s = document.createElement('script');
-            s.src = `https://www.universalis.com/Europe.Ireland/${dateKey}/jsonnext.js?callback=updateUI`;
-            document.body.appendChild(s);
-            toggleCalendar();
-        }
-
-        // Generate Calendar days
-        const drop = document.getElementById('calendar-drop');
+        
+        // Init Calendar
+        const drop = document.getElementById('calendar-dropdown');
         for (let i = 1; i <= 31; i++) {
             const btn = document.createElement('button');
-            btn.innerText = `May ${i}, 2026`;
-            btn.onclick = () => loadDate(i);
+            btn.innerText = "May " + i;
+            btn.onclick = () => selectDate(i);
             drop.appendChild(btn);
         }
 
-        // Start today
-        const script = document.createElement('script');
-        script.src = `https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=updateUI&cb=${new Date().getTime()}`;
-        document.body.appendChild(script);
-
-        window.onclick = (e) => { if (!e.target.closest('.relative')) document.getElementById('calendar-drop').classList.remove('show'); }
+        window.onclick = (e) => { if (!e.target.closest('.relative')) document.getElementById("calendar-dropdown").classList.remove('show'); }
     </script>
 </body>
 </html>
