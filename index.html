@@ -9,11 +9,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,600&family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #1c1917; }
         .serif { font-family: 'Crimson Pro', serif; }
-        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 10; border-radius: 12px; max-height: 300px; overflow-y: auto; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 200px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 10; border-radius: 12px; max-height: 300px; overflow-y: auto; width: 100%; }
         .dropdown-content button { width: 100%; padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
         .dropdown-content button:hover { background-color: #f0fdf4; }
         .show { display: block; }
-        .reading-box { border-left: 4px solid #065f46; padding-left: 1rem; margin-bottom: 2rem; }
+        .reading-box { border-left: 4px solid #065f46; padding-left: 1rem; margin-bottom: 1.5rem; }
+        .clickable-ref { color: #059669; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; transition: color 0.2s; }
+        .clickable-ref:hover { color: #064e3b; }
     </style>
 </head>
 <body class="min-h-screen py-6 px-4 flex flex-col items-center space-y-6">
@@ -24,8 +26,7 @@
                 <span id="selected-date-text">Select Date (May 2026)</span>
                 <span>▼</span>
             </button>
-            <div id="calendar-dropdown" class="dropdown-content">
-                </div>
+            <div id="calendar-dropdown" class="dropdown-content"></div>
         </div>
     </div>
 
@@ -40,33 +41,40 @@
             <div id="readings-list" class="space-y-4">
                 <div class="reading-box">
                     <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">First Reading</p>
-                    <p id="ref-1" class="font-bold text-stone-800 italic">Acts 15:1-6</p>
+                    <p id="ref-1" class="font-bold text-stone-800 italic"></p>
                 </div>
+                
+                <div id="second-reading-container" class="reading-box hidden">
+                    <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Second Reading</p>
+                    <p id="ref-2" class="font-bold text-stone-800 italic"></p>
+                </div>
+
                 <div class="reading-box">
                     <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Responsorial Psalm</p>
-                    <p id="ref-psalm" class="font-bold text-stone-800 italic">Psalm 122</p>
+                    <p id="ref-psalm" class="font-bold text-stone-800 italic"></p>
                 </div>
+
                 <div class="reading-box border-emerald-800 bg-emerald-50/50 p-4 rounded-r-xl">
                     <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Holy Gospel</p>
-                    <p id="ref-gospel" class="font-bold text-stone-800 italic">John 15:1-8</p>
+                    <p id="ref-gospel" class="font-bold text-stone-800 italic"></p>
                 </div>
             </div>
 
             <div class="mt-8 pt-6 border-t border-stone-100">
                 <p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Daily Prayer</p>
-                <p id="display-prayer" class="serif italic text-stone-700 leading-relaxed">"Lord, through the intercession of your Martyrs, help us remain in You, the True Vine. Amen."</p>
+                <p id="display-prayer" class="serif italic text-stone-700 leading-relaxed"></p>
             </div>
         </div>
     </div>
 
-    <div class="max-w-md w-full bg-emerald-900 shadow-xl rounded-[2rem] p-8 text-white">
-        <h3 class="serif text-xl font-bold mb-4 italic">Whole Bible Option</h3>
+    <div id="bible-viewer" class="max-w-md w-full bg-emerald-900 shadow-xl rounded-[2rem] p-8 text-white">
+        <h3 class="serif text-xl font-bold mb-4 italic">Scripture Text</h3>
         <div class="flex gap-2 mb-4">
             <input id="bible-input" type="text" placeholder="e.g. Matthew 5:16" class="flex-1 bg-emerald-800/50 border border-emerald-700 rounded-full px-4 py-2 text-sm text-white placeholder-emerald-300 focus:outline-none">
             <button onclick="lookupBible()" class="bg-white text-emerald-900 px-6 py-2 rounded-full text-sm font-bold">Open</button>
         </div>
-        <div id="bible-result" class="text-sm italic leading-relaxed text-emerald-100 max-h-40 overflow-y-auto">
-            Search any verse to read the full text...
+        <div id="bible-result" class="text-sm italic leading-relaxed text-emerald-100 max-h-64 overflow-y-auto pr-2">
+            Click on a reading reference above to view the verse here...
         </div>
     </div>
 
@@ -77,17 +85,19 @@
                 saint: "Saints Marian and James",
                 type: "Martyrs",
                 r1: "Acts 15:1-6",
+                r2: "", 
                 ps: "Psalm 122",
                 gs: "John 15:1-8",
-                prayer: "Lord, help us to remain in You as branches on the True Vine. Through the intercession of Saints Marian and James, may we bear much fruit. Amen."
+                prayer: "Lord, through the intercession of your Martyrs, help us remain in You, the True Vine. Amen."
             },
             "7": {
                 date: "Thursday, May 7, 2026",
                 saint: "Saint Rose Venerini",
                 type: "Virgin",
-                r1: "Acts 15:7-21",
-                ps: "Psalm 96",
-                gs: "John 15:9-11",
+                r1: "Genesis 2:20-25",
+                r2: "Romans 8:1-11",
+                ps: "Psalm 21:3-13",
+                gs: "Matthew 5:3-16",
                 prayer: "Gracious Father, may the joy of Christ be in us. Help us to follow the path of Saint Rose in serving Your people. Amen."
             }
         };
@@ -96,17 +106,37 @@
             document.getElementById("calendar-dropdown").classList.toggle("show");
         }
 
+        // Helper to wrap text in a clickable span
+        function makeClickable(reference) {
+            if (!reference) return "";
+            return `<span class="clickable-ref" onclick="lookupBible('${reference}')">${reference}</span>`;
+        }
+
         function selectDate(day) {
             const data = dailyData[day] || dailyData["6"];
+            
+            // Basic Info
             document.getElementById('display-date').innerText = data.date;
             document.getElementById('display-saint').innerText = data.saint;
             document.getElementById('display-martyr').innerText = data.type;
-            document.getElementById('ref-1').innerText = data.r1;
-            document.getElementById('ref-psalm').innerText = data.ps;
-            document.getElementById('ref-gospel').innerText = data.gs;
             document.getElementById('display-prayer').innerText = data.prayer;
             document.getElementById('selected-date-text').innerText = "May " + day + ", 2026";
-            toggleDropdown();
+
+            // Clickable Readings
+            document.getElementById('ref-1').innerHTML = makeClickable(data.r1);
+            document.getElementById('ref-psalm').innerHTML = makeClickable(data.ps);
+            document.getElementById('ref-gospel').innerHTML = makeClickable(data.gs);
+
+            // Handle Second Reading Visibility
+            const r2Container = document.getElementById('second-reading-container');
+            if (data.r2) {
+                r2Container.classList.remove('hidden');
+                document.getElementById('ref-2').innerHTML = makeClickable(data.r2);
+            } else {
+                r2Container.classList.add('hidden');
+            }
+
+            if(document.getElementById("calendar-dropdown").classList.contains('show')) toggleDropdown();
         }
 
         function genCalendar() {
@@ -119,22 +149,35 @@
             }
         }
 
-        async function lookupBible() {
-            const ref = document.getElementById('bible-input').value;
+        async function lookupBible(manualRef = null) {
+            const ref = manualRef || document.getElementById('bible-input').value;
             const resBox = document.getElementById('bible-result');
+            
             if (!ref) return;
-            resBox.innerText = "Consulting the Scriptures...";
+
+            // Visual feedback
+            resBox.innerHTML = "<span class='animate-pulse'>Fetching the Word...</span>";
+            
+            // Scroll viewer into view on mobile
+            document.getElementById('bible-viewer').scrollIntoView({ behavior: 'smooth' });
+
             try {
-                const response = await fetch(`https://bible-api.com/${ref}`);
+                const response = await fetch(`https://bible-api.com/${encodeURIComponent(ref)}`);
                 const data = await response.json();
-                resBox.innerHTML = `<strong>${data.reference}</strong><br>${data.text}`;
+                
+                if (data.text) {
+                    resBox.innerHTML = `<div class="mb-2 text-emerald-300 font-bold uppercase tracking-widest text-[10px]">${data.reference}</div>` + data.text;
+                } else {
+                    resBox.innerText = "Verse not found. Please check the reference format.";
+                }
             } catch (e) {
-                resBox.innerText = "Error: Check connection or reference format.";
+                resBox.innerText = "Connection error. Please try again later.";
             }
         }
 
+        // Close dropdown if user clicks outside
         window.onclick = function(event) {
-            if (!event.target.matches('button')) {
+            if (!event.target.closest('.relative')) {
                 var dropdowns = document.getElementsByClassName("dropdown-content");
                 for (var i = 0; i < dropdowns.length; i++) {
                     if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
@@ -142,7 +185,9 @@
             }
         }
 
+        // Initialize with default date
         genCalendar();
+        selectDate("6");
     </script>
 </body>
 </html>
