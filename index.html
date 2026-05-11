@@ -3,143 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liturgical Calendar & Bible</title>
+    <title>Daily Bread | Catholic Missal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #e67e22;
-            --bg: #f4f7f6;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        h1 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
-        .date-picker { margin-bottom: 20px; }
-        input[type="date"] { padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-size: 1rem; }
-
-        .section { margin-bottom: 25px; padding: 15px; border-radius: 8px; background: #fafafa; border-left: 5px solid var(--primary); }
-        .section h3 { margin-top: 0; color: var(--accent); text-transform: uppercase; font-size: 0.9rem; }
-        
-        .reading-link { display: block; padding: 12px; margin: 8px 0; background: white; border: 1px solid #eee; border-radius: 5px; cursor: pointer; transition: 0.2s; text-decoration: none; color: var(--primary); font-weight: bold; }
-        .reading-link:hover { background: #fff3e6; border-color: var(--accent); }
-
-        #bible-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; overflow-y: auto; }
-        .bible-content { background: white; width: 90%; max-width: 600px; margin: 50px auto; padding: 30px; border-radius: 8px; position: relative; line-height: 1.6; }
-        .close-btn { position: sticky; top: 0; float: right; font-size: 1.5rem; cursor: pointer; color: #e74c3c; }
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,600;1,600&family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fdfbf7; color: #1c1917; }
+        .serif { font-family: 'Crimson Pro', serif; }
+        .reading-card { border-left: 5px solid #065f46; padding: 1.25rem; margin-bottom: 1rem; cursor: pointer; border-radius: 0 1.5rem 1.5rem 0; background: white; shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        #bible-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; padding: 1.5rem; }
     </style>
 </head>
-<body>
+<body class="min-h-screen py-8 px-4 flex flex-col items-center">
 
-<div class="container">
-    <h1>Liturgical Calendar</h1>
-    
-    <div class="date-picker">
-        <label>Select Date: </label>
-        <input type="date" id="dateInput">
+    <div id="bible-overlay" onclick="this.style.display='none'">
+        <div class="max-w-xl mx-auto bg-white rounded-[2rem] p-8 mt-10 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <h3 id="overlay-title" class="serif text-2xl font-bold italic text-emerald-900 border-b pb-4 mb-4">Scripture</h3>
+            <div id="overlay-content" class="serif text-xl leading-relaxed text-stone-800 italic">Proclaiming...</div>
+            <button onclick="document.getElementById('bible-overlay').style.display='none'" class="mt-6 bg-stone-900 text-white px-6 py-2 rounded-full text-xs">Close</button>
+        </div>
     </div>
 
-    <div id="liturgy-info">
-        <div class="section">
-            <h3>Saint / Martyr of the Day</h3>
-            <p id="saint-name">Select a date to load info...</p>
+    <div class="max-w-md w-full bg-white shadow-2xl rounded-[3rem] overflow-hidden border border-stone-200">
+        <div class="bg-stone-900 p-10 text-white text-center">
+            <p id="display-date" class="text-emerald-400 text-[10px] font-bold uppercase tracking-[0.5em] mb-3"></p>
+            <h1 id="display-saint" class="serif text-4xl font-bold italic">Daily Liturgy</h1>
         </div>
-
-        <div class="section">
-            <h3>Today's Readings</h3>
-            <div id="readings-list">
-                <!-- Links will appear here -->
+        
+        <div id="liturgy-list" class="p-8">
+            <div class="text-center py-10">
+                <div class="w-10 h-10 border-4 border-stone-100 border-t-emerald-800 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="serif italic text-stone-400">Opening the Word...</p>
             </div>
         </div>
+    </div>
 
-        <div class="section">
-            <h3>Prayer of the Day</h3>
-            <p id="daily-prayer">Heavenly Father, guide us this day in your grace and peace. Amen.</p>
+    <div class="max-w-md w-full bg-emerald-950 shadow-xl rounded-[2.5rem] p-8 mt-6 text-white text-center">
+        <h3 class="serif text-xl mb-4 italic">Whole Bible Library</h3>
+        <div class="flex gap-2">
+            <input id="bible-input" type="text" placeholder="e.g. John 15:1" class="flex-1 bg-white/10 rounded-full px-5 py-3 text-sm text-white focus:outline-none placeholder:text-emerald-700">
+            <button onclick="openBible(document.getElementById('bible-input').value)" class="bg-emerald-600 text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg">Open</button>
         </div>
     </div>
-</div>
 
-<!-- Bible Reader Overlay -->
-<div id="bible-overlay">
-    <div class="bible-content">
-        <span class="close-btn" onclick="closeBible()">&times;</span>
-        <h2 id="bible-title"></h2>
-        <div id="bible-text">Loading...</div>
-    </div>
-</div>
-
-<script>
-    const dateInput = document.getElementById('dateInput');
-    
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.value = today;
-
-    // Listen for date change
-    dateInput.addEventListener('change', (e) => fetchLiturgy(e.target.value));
-
-    async function fetchLiturgy(date) {
-        const [year, month, day] = date.split('-');
-        const saintDisplay = document.getElementById('saint-name');
-        const readingsList = document.getElementById('readings-list');
-
-        try {
-            // 1. Fetch Liturgical Data (Saint/Season)
-            const response = await fetch(`https://calapi.inadiutorium.cz/api/v1/rituals/roman/calendar/${year}/${month}/${day}`);
-            const data = await response.json();
-
-            // Display Celebrations
-            const celebrations = data.celebrations.map(c => c.title).join(", ");
-            saintDisplay.innerText = celebrations || "Ferial Day (No specific Saint)";
-
-            // 2. Fetch Readings (Mocking references since free APIs often require specific liturgical years)
-            // In a production app, you would fetch from Universalis or a curated JSON DB
-            // Here, we provide common Sunday-style structures for demo
-            const mockReadings = [
-                { title: "First Reading", ref: "Genesis 1:1-5" },
-                { title: "Responsorial Psalm", ref: "Psalm 23" },
-                { title: "Gospel", ref: "John 1:1-14" }
-            ];
-
-            readingsList.innerHTML = '';
-            mockReadings.forEach(r => {
-                const btn = document.createElement('a');
-                btn.className = 'reading-link';
-                btn.innerText = `${r.title}: ${r.ref}`;
-                btn.onclick = () => openBible(r.ref);
-                readingsList.appendChild(btn);
-            });
-
-        } catch (error) {
-            saintDisplay.innerText = "Error loading data. Please try another date.";
+    <script>
+        // Use a high-reliability JSONP bridge
+        function updateUI(data) {
+            if (!data || !data.Mass_Reading) return;
+            document.getElementById('display-date').innerText = data.date;
+            document.getElementById('display-saint').innerText = data.day;
+            
+            const m = data.Mass_Reading;
+            let listHtml = "";
+            if (m.Reading1) listHtml += createCard("First Reading", m.Reading1.source);
+            if (m.Psalm) listHtml += createCard("Responsorial Psalm", m.Psalm.source);
+            if (m.Reading2) listHtml += createCard("Second Reading", m.Reading2.source);
+            if (m.Gospel) listHtml += createCard("Holy Gospel", m.Gospel.source, true);
+            document.getElementById('liturgy-list').innerHTML = listHtml;
         }
-    }
 
-    async function openBible(reference) {
-        const overlay = document.getElementById('bible-overlay');
-        const title = document.getElementById('bible-title');
-        const content = document.getElementById('bible-text');
-
-        overlay.style.display = 'block';
-        title.innerText = reference;
-        content.innerText = "Fetching full text...";
-
-        try {
-            // Using the Open Bible API
-            const response = await fetch(`https://bible-api.com/${reference}`);
-            const data = await response.json();
-            content.innerHTML = data.text.replace(/\n/g, '<br>');
-        } catch (err) {
-            content.innerText = "Could not load the Bible text. Check the reference format.";
+        function createCard(title, ref, isGospel = false) {
+            return `<div onclick="openBible('${ref}')" class="reading-card ${isGospel ? 'bg-emerald-50' : 'bg-white'}">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest block mb-1">${title}</span>
+                <p class="text-xl font-bold text-stone-800">${ref}</p>
+            </div>`;
         }
-    }
 
-    function closeBible() {
-        document.getElementById('bible-overlay').style.display = 'none';
-    }
+        async function openBible(ref) {
+            if (!ref) return;
+            document.getElementById('bible-overlay').style.display = 'block';
+            document.getElementById('overlay-title').innerText = ref;
+            try {
+                const res = await fetch(`https://bible-api.com/${ref}`);
+                const data = await res.json();
+                document.getElementById('overlay-content').innerHTML = data.text ? data.text.replace(/\n/g, '<br><br>') : "Not found.";
+            } catch (e) { document.getElementById('overlay-content').innerText = "Network block. Please try again."; }
+        }
 
-    // Initial Load
-    fetchLiturgy(today);
-</script>
+        // Script to fetch the data
+        const script = document.createElement('script');
+        script.src = `https://www.universalis.com/Europe.Ireland/jsonnext.js?callback=updateUI&cb=${new Date().getTime()}`;
+        document.body.appendChild(script);
 
+        // Immediate date display
+        document.getElementById('display-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    </script>
 </body>
 </html>
