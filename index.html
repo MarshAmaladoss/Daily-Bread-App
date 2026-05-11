@@ -125,16 +125,16 @@
             buildDropdown(); 
 
             try {
-                // 2. CALL THE LECTIO API
-                // We use HTTPS here to prevent mixed-content errors in modern browsers
-                const response = await fetch(`https://lectio-api.org/api/v1/readings/${dateKey}`);
+                // 2. CALL THE LECTIO API WITH THE RCL TRADITION PARAMETER
+                // Using HTTPS to prevent mixed-content blocking in modern browsers
+                const response = await fetch(`https://lectio-api.org/api/v1/readings/${dateKey}?tradition=rcl`);
                 
                 if (!response.ok) throw new Error("API failed to fetch readings");
                 
                 const apiData = await response.json();
 
                 // 3. MAP THE API JSON TO YOUR HTML
-                // Note: Change keys like apiData.saint or apiData.firstReading to match the API's exact output if needed
+                // Note: Change keys like apiData.saint or apiData.firstReading if the API JSON output uses different names
                 document.getElementById('display-saint').innerText = apiData.saint || "Daily Mass";
                 document.getElementById('display-type').innerText = apiData.type || "Weekday";
                 document.getElementById('ref-1').innerText = apiData.firstReading || "N/A";
