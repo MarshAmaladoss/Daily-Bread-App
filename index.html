@@ -42,7 +42,7 @@
             <div class="flex justify-between items-start">
                 <div>
                     <p id="display-date" class="text-emerald-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-1">Loading Date...</p>
-                    <h2 id="display-saint" class="serif text-3xl font-bold italic">Checking Calendar...</h2>
+                    <h2 id="display-saint" class="serif text-3xl font-bold italic">Fetching Readings...</h2>
                     <p id="display-type" class="text-red-400 text-[10px] uppercase font-black tracking-widest mt-1">...</p>
                 </div>
                 <div class="relative">
@@ -90,15 +90,6 @@
 
     <!-- Application Logic -->
     <script>
-        // YOUR MANUAL BIBLE READINGS DATABASE
-        // You only need to type the references here. The API handles the Saints and Feast ranks!
-        const dailyData = {
-            "2026-05-06": { r1: "Acts 15:1-6", ps: "Psalm 122", gs: "John 15:1-8" },
-            "2026-05-07": { r1: "Acts 15:7-21", ps: "Psalm 96", gs: "John 15:9-11" },
-            "2026-05-11": { r1: "Acts 16:11-15", ps: "Psalm 149", gs: "John 15:26-16:4" }
-            // Keep adding dates here as needed!
-        };
-
         let currentViewDate = new Date(); 
 
         function toggleDropdown() { 
@@ -110,7 +101,7 @@
             return dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
         }
 
-        // Formats date for your local data dictionary (e.g., "2026-05-11")
+        // Formats date for the API (e.g., "2026-05-11")
         function getYYYYMMDD(dateObj) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -124,46 +115,38 @@
             
             // 1. Show Loading State
             document.getElementById('display-date').innerText = getFormattedDateString(currentViewDate);
-            document.getElementById('display-saint').innerText = "Checking Liturgical Calendar...";
+            document.getElementById('display-saint').innerText = "Fetching Readings...";
             document.getElementById('display-type').innerText = "...";
+            document.getElementById('ref-1').innerText = "Loading...";
+            document.getElementById('ref-psalm').innerText = "Loading...";
+            document.getElementById('ref-gospel').innerText = "Loading...";
             
             document.getElementById("calendar-dropdown").classList.remove("show");
             buildDropdown(); 
 
             try {
-                // 2. FETCH THE FEAST DAY FROM THE LIVE CALENDAR API
-                const year = currentViewDate.getFullYear();
-                const month = currentViewDate.getMonth() + 1; // JS months are 0-11, API needs 1-12
-                const day = currentViewDate.getDate();
+                // 2. CALL THE API USING THE DYNAMIC DATE VARIABLE
+                const response = await fetch(`https://lectio-api.org/api/v1/readings/${dateKey}`);
                 
-                const response = await fetch(`https://calapi.inadiutorium.cz/api/v0/en/calendars/default/${year}/${month}/${day}`);
-                if (!response.ok) throw new Error("API failed");
+                if (!response.ok) throw new Error("API failed to fetch readings for this date.");
                 
                 const apiData = await response.json();
-                
-                // The API returns an array of "celebrations". We grab the primary one.
-                const primaryFeast = apiData.celebrations[0];
 
-                document.getElementById('display-saint').innerText = primaryFeast.title;
-                document.getElementById('display-type').innerText = primaryFeast.rank;
+                // 3. MAP THE API JSON TO YOUR HTML (With multiple robust fallbacks)
+                document.getElementById('display-saint').innerText = apiData.saint || apiData.title || apiData.feast || "Daily Mass";
+                document.getElementById('display-type').innerText = apiData.type || apiData.rank || "Weekday";
+                
+                document.getElementById('ref-1').innerText = apiData.firstReading || apiData.reading_1 || apiData.reading1 || "N/A";
+                document.getElementById('ref-psalm').innerText = apiData.psalm || apiData.responsorial || "N/A";
+                document.getElementById('ref-gospel').innerText = apiData.gospel || apiData.gospel_reading || "N/A";
 
             } catch (error) {
-                console.error("Calendar API Error:", error);
-                document.getElementById('display-saint').innerText = "Feria";
-                document.getElementById('display-type').innerText = "Weekday";
-            }
-
-            // 3. FETCH THE BIBLE READINGS FROM YOUR LOCAL DATA
-            const localData = dailyData[dateKey];
-            
-            if (localData) {
-                document.getElementById('ref-1').innerText = localData.r1;
-                document.getElementById('ref-psalm').innerText = localData.ps;
-                document.getElementById('ref-gospel').innerText = localData.gs;
-            } else {
-                document.getElementById('ref-1').innerText = "Check Lectionary";
-                document.getElementById('ref-psalm').innerText = "Check Lectionary";
-                document.getElementById('ref-gospel').innerText = "Check Lectionary";
+                console.error("API Error:", error);
+                document.getElementById('display-saint').innerText = "Readings Unavailable";
+                document.getElementById('display-type').innerText = "Check Connection";
+                document.getElementById('ref-1').innerText = "-";
+                document.getElementById('ref-psalm').innerText = "-";
+                document.getElementById('ref-gospel').innerText = "-";
             }
         }
 
@@ -187,7 +170,7 @@
         }
 
         async function openBible(ref) {
-            if (!ref || ref === "Check Lectionary" || ref === "Loading...") return;
+            if (!ref || ref === "Loading..." || ref === "N/A" || ref === "-") return;
             const overlay = document.getElementById('bible-overlay');
             const content = document.getElementById('overlay-content');
             const title = document.getElementById('overlay-title');
