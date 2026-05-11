@@ -39,9 +39,9 @@
         <div class="bg-stone-900 p-8 text-white relative">
             <div class="flex justify-between items-start">
                 <div>
-                    <p id="display-date" class="text-emerald-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-1">Wednesday, May 6, 2026</p>
-                    <h2 id="display-saint" class="serif text-3xl font-bold italic">Saints Marian and James</h2>
-                    <p id="display-type" class="text-red-400 text-[10px] uppercase font-black tracking-widest mt-1">Martyrs</p>
+                    <p id="display-date" class="text-emerald-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-1">Loading Date...</p>
+                    <h2 id="display-saint" class="serif text-3xl font-bold italic">Loading...</h2>
+                    <p id="display-type" class="text-red-400 text-[10px] uppercase font-black tracking-widest mt-1">Loading...</p>
                 </div>
                 <div class="relative">
                     <button onclick="toggleDropdown()" class="bg-white/10 p-2 rounded-lg">📅</button>
@@ -55,17 +55,17 @@
             
             <div onclick="openBible(document.getElementById('ref-1').innerText)" class="reading-card">
                 <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">First Reading</span>
-                <p id="ref-1" class="text-lg font-bold text-stone-800">Acts 15:1-6</p>
+                <p id="ref-1" class="text-lg font-bold text-stone-800">-</p>
             </div>
 
             <div onclick="openBible(document.getElementById('ref-psalm').innerText)" class="reading-card">
                 <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Responsorial Psalm</span>
-                <p id="ref-psalm" class="text-lg font-bold text-stone-800">Psalm 122</p>
+                <p id="ref-psalm" class="text-lg font-bold text-stone-800">-</p>
             </div>
 
             <div onclick="openBible(document.getElementById('ref-gospel').innerText)" class="reading-card border-emerald-800 bg-emerald-50">
                 <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">Holy Gospel</span>
-                <p id="ref-gospel" class="text-xl font-bold text-stone-900">John 15:1-8</p>
+                <p id="ref-gospel" class="text-xl font-bold text-stone-900">-</p>
             </div>
 
             <div class="mt-8 pt-6 border-t text-center">
@@ -86,34 +86,84 @@
     </div>
 
     <script>
-        // Expanded to include today (May 11)
+        // Data is now keyed by standard YYYY-MM-DD format
         const dailyData = {
-            "6": { date: "Wednesday, May 6", saint: "Saints Marian and James", type: "Martyrs", r1: "Acts 15:1-6", ps: "Psalm 122", gs: "John 15:1-8" },
-            "7": { date: "Thursday, May 7", saint: "Saint Rose Venerini", type: "Virgin", r1: "Acts 15:7-21", ps: "Psalm 96", gs: "John 15:9-11" },
-            "11": { date: "Monday, May 11", saint: "Saint Ignatius of Laconi", type: "Religious", r1: "Acts 16:11-15", ps: "Psalm 149", gs: "John 15:26-16:4" }
-            // Note: You will need to populate the rest of the month's data here!
+            "2026-05-06": { saint: "Saints Marian and James", type: "Martyrs", r1: "Acts 15:1-6", ps: "Psalm 122", gs: "John 15:1-8" },
+            "2026-05-07": { saint: "Saint Rose Venerini", type: "Virgin", r1: "Acts 15:7-21", ps: "Psalm 96", gs: "John 15:9-11" },
+            "2026-05-11": { saint: "Saint Ignatius of Laconi", type: "Religious", r1: "Acts 16:11-15", ps: "Psalm 149", gs: "John 15:26-16:4" }
+            // Keep adding dates here!
         };
+
+        let currentViewDate = new Date(); // Tracks the date the user is currently looking at
 
         function toggleDropdown() { 
             document.getElementById("calendar-dropdown").classList.toggle("show"); 
         }
-        
-        function selectDate(day) {
-            // Fallback to day 6 if the selected day isn't in our data yet
-            const data = dailyData[day] || dailyData["6"]; 
-            document.getElementById('display-date').innerText = data.date + ", 2026";
+
+        // Helper function to format date nicely (e.g. "Monday, May 11, 2026")
+        function getFormattedDateString(dateObj) {
+            return dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        // Helper function to turn a JS Date object into "YYYY-MM-DD" for dictionary lookup
+        function getYYYYMMDD(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function selectDate(dateObj) {
+            currentViewDate = new Date(dateObj); // Store the selection
+            const dateKey = getYYYYMMDD(currentViewDate);
+            
+            // Fallback object if you haven't written the readings for this specific day yet
+            const defaultData = { 
+                saint: "Feria", 
+                type: "Weekday", 
+                r1: "Check Lectionary", 
+                ps: "Check Lectionary", 
+                gs: "Check Lectionary" 
+            };
+
+            const data = dailyData[dateKey] || defaultData; 
+
+            // Update DOM
+            document.getElementById('display-date').innerText = getFormattedDateString(currentViewDate);
             document.getElementById('display-saint').innerText = data.saint;
             document.getElementById('display-type').innerText = data.type;
             document.getElementById('ref-1').innerText = data.r1;
             document.getElementById('ref-psalm').innerText = data.ps;
             document.getElementById('ref-gospel').innerText = data.gs;
             
-            // Hide dropdown after selection
             document.getElementById("calendar-dropdown").classList.remove("show");
+            buildDropdown(); // Rebuild dropdown in case the month changed
+        }
+
+        function buildDropdown() {
+            const drop = document.getElementById('calendar-dropdown');
+            drop.innerHTML = ""; // Clear existing options
+            
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+            const monthName = currentViewDate.toLocaleDateString('en-US', { month: 'long' });
+            
+            // Magic formula to get the exact number of days in the current month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = `${monthName} ${i}`;
+                btn.onclick = () => {
+                    // Create a new date object for the day the user clicked
+                    selectDate(new Date(year, month, i));
+                };
+                drop.appendChild(btn);
+            }
         }
 
         async function openBible(ref) {
-            if (!ref) return;
+            if (!ref || ref === "Check Lectionary") return;
             const overlay = document.getElementById('bible-overlay');
             const content = document.getElementById('overlay-content');
             const title = document.getElementById('overlay-title');
@@ -134,15 +184,6 @@
         function closeBible() { 
             document.getElementById('bible-overlay').style.display = 'none'; 
         }
-        
-        // Init Calendar Dropdown
-        const drop = document.getElementById('calendar-dropdown');
-        for (let i = 1; i <= 31; i++) {
-            const btn = document.createElement('button');
-            btn.innerText = "May " + i;
-            btn.onclick = () => selectDate(i);
-            drop.appendChild(btn);
-        }
 
         // Close dropdown if clicking outside of it
         window.onclick = (e) => { 
@@ -151,18 +192,10 @@
             }
         }
 
-        // AUTO-LOAD TODAY'S DATA ON STARTUP
+        // INIT SCRIPT ON LOAD
         window.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const currentDay = today.getDate().toString(); // Gets the day of the month (e.g., "11")
-            
-            // Check if we have data written for today's date
-            if (dailyData[currentDay]) {
-                selectDate(currentDay);
-            } else {
-                // If you haven't filled in the data for today yet, load a default or show a message
-                selectDate("6"); // Currently defaults to May 6th if data is missing
-            }
+            const today = new Date(); // Automatically gets system date
+            selectDate(today); // Loads today's data and builds UI
         });
     </script>
 </body>
